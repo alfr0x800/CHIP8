@@ -1,3 +1,5 @@
 CHIP8/x64
 Vendor
 x64
+CHIP8/CHIP8.vcxproj.user
+.vs
