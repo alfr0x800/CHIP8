@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Window.h"
+
 #include <array>
 #include <string_view>
 
@@ -19,6 +21,8 @@ private:
 	std::uint8_t _delayTimer {};
 	std::uint8_t _soundTimer {};
 
+	Window _window;
+
 public:
 	Interpreter(const std::string_view& romPath);
 	~Interpreter();
@@ -27,4 +31,5 @@ public:
 
 private:
 	void Execute();
+	char GetKeyConverted();
 };

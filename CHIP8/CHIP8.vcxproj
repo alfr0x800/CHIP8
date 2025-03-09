@@ -146,6 +146,7 @@
     <ClCompile Include="Decode.cpp" />
     <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Vendor\imgui\imconfig.h" />
@@ -159,7 +160,9 @@
     <ClInclude Include="..\Vendor\imgui\imstb_textedit.h" />
     <ClInclude Include="..\Vendor\imgui\imstb_truetype.h" />
     <ClInclude Include="Decode.h" />
+    <ClInclude Include="Font.h" />
     <ClInclude Include="Interpreter.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
