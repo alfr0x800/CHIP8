@@ -37,7 +37,7 @@
     <ClCompile Include="..\Vendor\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="Interpreter.cpp">
+    <ClCompile Include="CHIP8.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Decode.cpp">
@@ -78,7 +78,7 @@
     <ClInclude Include="..\Vendor\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="Interpreter.h">
+    <ClInclude Include="CHIP8.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Decode.h">

@@ -1,4 +1,4 @@
-#include "Interpreter.h"
+#include "CHIP8.h"
 
 #include <print>
 
@@ -10,6 +10,6 @@ int main(int argc, const char** argv)
 		std::exit(1);
 	}
 
-	Interpreter interpreter(argv[0]);
-	interpreter.Run();
+	CHIP8 CHIP8(argv[1]);
+	CHIP8.Run();
 }
