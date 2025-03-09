@@ -2,33 +2,14 @@
 #include "Interpreter.h"
 
 #include <fstream>
-#include <print>
 
 Interpreter::Interpreter(const std::string_view& romPath)
 {
-	// Initialise the memory
-	_memory.fill({});
-	_stack.fill({});
-
-	// Initialise the registers
-	_pc = _programOffset;
-	_i = {};
-	_sp = {};
-	_v.fill({});
-
-	// Initialise the timers
-	_delayTimer = {};
-	_soundTimer = {};
-
-	// Load the ROM into memory
 	std::ifstream rom(romPath.data());
 	if (rom.is_open())
-	{
-		for (size_t i = _programOffset; i < _memory.size() && !rom.eof(); i++)
+		for (size_t i = _pc; i < _memory.size() && !rom.eof(); i++)
 			_memory[i] = rom.get();
-	}
 
-	// Load the font into memory
 }
 
 Interpreter::~Interpreter()
@@ -43,12 +24,10 @@ void Interpreter::Execute()
 	switch (ins.Opcode)
 	{
 	case Opcode::Cls_00E0: break;
-	case Opcode::Ret_00EE: break;
 
+	case Opcode::Ret_00EE: _pc = _stack[_sp--]; break;
 	case Opcode::Jp_1nnn: _pc = ins.NNN; break;
-
-	case Opcode::Call_2nnn: break;
-
+	case Opcode::Call_2nnn: _stack[_sp++] = _pc; _pc = ins.NNN; break;
 	case Opcode::Se_3xnn: _pc += _v[ins.X] == ins.NN; break;
 	case Opcode::Sne_4xnn: _pc += _v[ins.X] != ins.NN; break;
 	case Opcode::Se_5xy0: _pc += _v[ins.X] == _v[ins.Y]; break;

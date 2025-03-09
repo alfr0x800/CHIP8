@@ -144,7 +144,6 @@
     <ClCompile Include="..\Vendor\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\Vendor\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Decode.cpp" />
-    <ClCompile Include="Disassembler.cpp" />
     <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -160,7 +159,6 @@
     <ClInclude Include="..\Vendor\imgui\imstb_textedit.h" />
     <ClInclude Include="..\Vendor\imgui\imstb_truetype.h" />
     <ClInclude Include="Decode.h" />
-    <ClInclude Include="Disassembler.h" />
     <ClInclude Include="Interpreter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
