@@ -7,17 +7,17 @@
 class Window
 {
 public:
-	bool ShowRegisters {false};
-	bool ShowDebugger {false};
-	bool ShowDiassembler {false};
+	bool ShowRegisters{ false };
+	bool ShowDebugger{ false };
+	bool ShowDiassembler{ false };
 
 private:
-	SDL_Window* _window {};
-	SDL_Renderer* _renderer {};
-	SDL_Texture* _displayTx {};
+	SDL_Window* _window{};
+	SDL_Renderer* _renderer{};
+	SDL_Texture* _displayTx{};
 
-	bool _isOpen {true};
-	char _lastKeyPressed {};
+	bool _isOpen{ true };
+	char _lastKeyPressed{};
 
 public:
 	Window();

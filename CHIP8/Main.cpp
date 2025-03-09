@@ -1,5 +1,7 @@
 #include "CHIP8.h"
 
+#include "Decode.h"
+
 #include <print>
 
 int main(int argc, const char** argv)

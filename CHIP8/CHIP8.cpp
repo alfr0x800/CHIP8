@@ -10,8 +10,8 @@
 
 CHIP8::CHIP8(const std::string_view& romPath) 
 {
-	std::ifstream rom(romPath.data());
-	size_t romSize { std::filesystem::file_size(romPath) };
+	std::ifstream rom(romPath.data(), std::ifstream::binary);
+	size_t romSize{ std::filesystem::file_size(romPath) };
 	if (romSize < _memory.size() - _pc)
 		rom.read((char*)&_memory[_pc], romSize);
 
@@ -23,9 +23,7 @@ void CHIP8::Run()
 	while (_window.GetIsOpen())
 	{
 		_window.PollEvents();
-		
 		Execute();
-		
 		_window.BeginDraw();
 		_window.DrawTools();
 		_window.DrawDisplay(_display);
@@ -35,18 +33,58 @@ void CHIP8::Run()
 	}
 }
 
+static const char* ops[]
+{
+	"None",
+	"Cls_00E0",
+	"Ret_00EE",
+	"Dw_0nnn",
+	"Jp_1nnn",
+	"Call_2nnn",
+	"Se_3xnn",
+	"Sne_4xnn",
+	"Se_5xy0",
+	"Ld_6xnn",
+	"Add_7xnn",
+	"Ld_8xy0",
+	"Or_8xy1",
+	"And_8xy2",
+	"Xor_8xy3",
+	"Add_8xy4",
+	"Sub_8xy5",
+	"Shr_8xy6",
+	"Subn_8xy7",
+	"Shl_8xyE",
+	"Sne_9xy0",
+	"Ld_Annn",
+	"Jp_Bnnn",
+	"Rnd_Cxnn",
+	"Drw_Dxyn",
+	"Skp_Ex9E",
+	"Sknp_ExA1",
+	"Ld_Fx07",
+	"Ld_Fx0A",
+	"Ld_Fx15",
+	"Ld_Fx18",
+	"Add_Fx1E",
+	"Ld_Fx29",
+	"Ld_Fx33",
+	"Ld_Fx55",
+	"Ld_Fx65"
+};
+
 void CHIP8::Execute()
 {
 	Instruction ins((_memory[_pc++] << 8) | _memory[_pc++]);
 	switch (ins.Opcode)
 	{
-		case Opcode::Cls_00E0: DisplayClear(); break;
-		case Opcode::Ret_00EE: _pc = _stack[_sp--]; break;
+		case Opcode::Cls_00E0: _display = {}; break;
+		case Opcode::Ret_00EE: _pc = _stack[--_sp]; break;
 		case Opcode::Jp_1nnn: _pc = ins.NNN; break;
 		case Opcode::Call_2nnn: _stack[_sp++] = _pc; _pc = ins.NNN; break;
-		case Opcode::Se_3xnn: _pc += _v[ins.X] == ins.NN; break;
-		case Opcode::Sne_4xnn: _pc += _v[ins.X] != ins.NN; break;
-		case Opcode::Se_5xy0: _pc += _v[ins.X] == _v[ins.Y]; break;
+		case Opcode::Se_3xnn: _pc += _v[ins.X] == ins.NN ? 2 : 0; break;
+		case Opcode::Sne_4xnn: _pc += _v[ins.X] != ins.NN ? 2 : 0; break;
+		case Opcode::Se_5xy0: _pc += _v[ins.X] == _v[ins.Y] ? 2 : 0; break;
 		case Opcode::Ld_6xnn: _v[ins.X] = ins.NN; break;
 		case Opcode::Add_7xnn: _v[ins.X] += ins.NN; break;
 		case Opcode::Ld_8xy0: _v[ins.X] = _v[ins.Y]; break;
@@ -58,11 +96,11 @@ void CHIP8::Execute()
 		case Opcode::Shr_8xy6: _v[ins.X] = _v[ins.Y]; _v[0xF] = _v[ins.X] & 1; _v[ins.X] >>= 1; break;
 		case Opcode::Subn_8xy7: _v[0xF] = _v[ins.X] - _v[ins.Y] < 0; _v[ins.X] = _v[ins.Y] - _v[ins.X]; break;
 		case Opcode::Shl_8xyE: _v[ins.X] = _v[ins.Y]; _v[0xF] = (_v[ins.X] >> 7) & 1; _v[ins.X] <<= 1; break;
-		case Opcode::Sne_9xy0: _pc += _v[ins.X] != _v[ins.Y]; break;
+		case Opcode::Sne_9xy0: _pc += _v[ins.X] != _v[ins.Y] ? 2 : 0; break;
 		case Opcode::Ld_Annn: _i = ins.NNN; break;
 		case Opcode::Jp_Bnnn: _pc = ins.NNN + _v[0]; break;
 		case Opcode::Rnd_Cxnn: _v[ins.X] = std::rand() % ins.NN; break;
-		case Opcode::Drw_Dxyn: DisplaySprite(ins.X, ins.Y, ins.N); break;
+		case Opcode::Drw_Dxyn: DisplaySprite(_v[ins.X], _v[ins.Y], ins.N); break;
 		case Opcode::Skp_Ex9E: _pc += GetKeyConverted() == _v[ins.X] ? 2 : 0; break;
 		case Opcode::Sknp_ExA1: _pc += GetKeyConverted() != _v[ins.X] ? 2 : 0; break;
 		case Opcode::Ld_Fx07: _v[ins.X] = _delayTimer; break;
@@ -77,27 +115,20 @@ void CHIP8::Execute()
 		case Opcode::Ld_Fx55: std::copy(_v.begin(), _v.begin() + ins.X, _memory.begin() + _i); break;
 		case Opcode::Ld_Fx65: std::copy(_memory.begin() + _i, _memory.begin() + _i + ins.X, _v.begin()); break;
 	}
-}
 
-void CHIP8::DisplayClear()
-{
-	_display = {};
+	//std::println("PCAFTER : {}", _pc);
 }
 
 void CHIP8::DisplaySprite(int x, int y, int h)
 {
-	for (int y = 0; y < h; y++)
+	for (int yOff{}; yOff < h; yOff++)
 	{
-		for (int x = 0; x < 8; x++)
+		for (int xOff{}; xOff < 8; xOff++)
 		{
-			uint8_t spritePixel = _memory[_i + y] & (0x80 >> x);
-
-			if (spritePixel)
+			if ((_memory[_i + yOff] << xOff) & 0x80)
 			{
-				if (_display[(y * 64) + x])
-					_v[0xF] = 1;
-
-				_display[(y * 64) + x] ^= 1;
+				_v[0xF] = _display[(y + yOff) * 64 + (x + xOff)];
+				_display[(y + yOff) * 64 + (x + xOff)] ^= true;
 			}
 		}
 	}

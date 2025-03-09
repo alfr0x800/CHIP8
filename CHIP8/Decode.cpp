@@ -2,8 +2,8 @@
 
 Instruction::Instruction(uint16_t raw)
 {
-	X = raw & 0x0F00;
-	Y = raw & 0x00F0;
+	X = (raw & 0x0F00) >> 8;
+	Y = (raw & 0x00F0) >> 4;
 	NNN = raw & 0x0FFF;
 	NN = raw & 0x00FF;
 	N = raw & 0x000F;

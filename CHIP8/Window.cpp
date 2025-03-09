@@ -75,9 +75,9 @@ void Window::DrawTools()
 void Window::DrawDisplay(const std::array<bool, 64 * 32>& display)
 {
 	SDL_SetRenderTarget(_renderer, _displayTx);
-	for (size_t y {}; y < 32; y++)
+	for (size_t y{}; y < 32; y++)
 	{
-		for (size_t x {}; x < 64; x++)
+		for (size_t x{}; x < 64; x++)
 		{
 			if (display[(y * 64) + x])
 				SDL_SetRenderDrawColor(_renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -104,7 +104,6 @@ void Window::DrawRegisters(uint16_t pc, uint16_t i, uint16_t sp, const std::arra
 	ImGui::SeparatorText("General-purpose");
 	for (size_t i = 0; i < v.size(); i++)
 		ImGui::Text("V%X: %d", i, v[i]);
-
 	ImGui::End();
 }
 
