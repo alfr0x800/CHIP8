@@ -33,46 +33,6 @@ void CHIP8::Run()
 	}
 }
 
-static const char* ops[]
-{
-	"None",
-	"Cls_00E0",
-	"Ret_00EE",
-	"Dw_0nnn",
-	"Jp_1nnn",
-	"Call_2nnn",
-	"Se_3xnn",
-	"Sne_4xnn",
-	"Se_5xy0",
-	"Ld_6xnn",
-	"Add_7xnn",
-	"Ld_8xy0",
-	"Or_8xy1",
-	"And_8xy2",
-	"Xor_8xy3",
-	"Add_8xy4",
-	"Sub_8xy5",
-	"Shr_8xy6",
-	"Subn_8xy7",
-	"Shl_8xyE",
-	"Sne_9xy0",
-	"Ld_Annn",
-	"Jp_Bnnn",
-	"Rnd_Cxnn",
-	"Drw_Dxyn",
-	"Skp_Ex9E",
-	"Sknp_ExA1",
-	"Ld_Fx07",
-	"Ld_Fx0A",
-	"Ld_Fx15",
-	"Ld_Fx18",
-	"Add_Fx1E",
-	"Ld_Fx29",
-	"Ld_Fx33",
-	"Ld_Fx55",
-	"Ld_Fx65"
-};
-
 void CHIP8::Execute()
 {
 	Instruction ins((_memory[_pc++] << 8) | _memory[_pc++]);
@@ -88,13 +48,13 @@ void CHIP8::Execute()
 		case Opcode::Ld_6xnn: _v[ins.X] = ins.NN; break;
 		case Opcode::Add_7xnn: _v[ins.X] += ins.NN; break;
 		case Opcode::Ld_8xy0: _v[ins.X] = _v[ins.Y]; break;
-		case Opcode::Or_8xy1: _v[ins.X] |= _v[ins.Y]; break;
-		case Opcode::And_8xy2: _v[ins.X] &= _v[ins.Y]; break;
-		case Opcode::Xor_8xy3: _v[ins.X] ^= _v[ins.Y]; break;
-		case Opcode::Add_8xy4: _v[0xF] = _v[ins.X] + _v[ins.Y] > UINT8_MAX; _v[ins.X] += _v[ins.Y]; break;
-		case Opcode::Sub_8xy5: _v[0xF] = _v[ins.X] - _v[ins.Y] < 0; _v[ins.X] -= _v[ins.Y]; break;
+		case Opcode::Or_8xy1: _v[ins.X] |= _v[ins.Y]; _v[0xF] = 0; break;
+		case Opcode::And_8xy2: _v[ins.X] &= _v[ins.Y]; _v[0xF] = 0; break;
+		case Opcode::Xor_8xy3: _v[ins.X] ^= _v[ins.Y]; _v[0xF] = 0; break;
+		case Opcode::Add_8xy4: _v[ins.X] += _v[ins.Y]; _v[0xF] = _v[ins.X] + _v[ins.Y] > UINT8_MAX; break;
+		case Opcode::Sub_8xy5: _v[ins.X] -= _v[ins.Y]; _v[0xF] = _v[ins.X] - _v[ins.Y] < 0; break;
 		case Opcode::Shr_8xy6: _v[ins.X] = _v[ins.Y]; _v[0xF] = _v[ins.X] & 1; _v[ins.X] >>= 1; break;
-		case Opcode::Subn_8xy7: _v[0xF] = _v[ins.X] - _v[ins.Y] < 0; _v[ins.X] = _v[ins.Y] - _v[ins.X]; break;
+		case Opcode::Subn_8xy7: _v[ins.X] = _v[ins.Y] - _v[ins.X]; _v[0xF] = _v[ins.X] - _v[ins.Y] < 0; break;
 		case Opcode::Shl_8xyE: _v[ins.X] = _v[ins.Y]; _v[0xF] = (_v[ins.X] >> 7) & 1; _v[ins.X] <<= 1; break;
 		case Opcode::Sne_9xy0: _pc += _v[ins.X] != _v[ins.Y] ? 2 : 0; break;
 		case Opcode::Ld_Annn: _i = ins.NNN; break;
@@ -115,12 +75,14 @@ void CHIP8::Execute()
 		case Opcode::Ld_Fx55: std::copy(_v.begin(), _v.begin() + ins.X, _memory.begin() + _i); break;
 		case Opcode::Ld_Fx65: std::copy(_memory.begin() + _i, _memory.begin() + _i + ins.X, _v.begin()); break;
 	}
-
-	//std::println("PCAFTER : {}", _pc);
 }
 
 void CHIP8::DisplaySprite(int x, int y, int h)
 {
+	// Screen wrapping
+	x %= 64;
+	y %= 32;
+	// Draw the sprite
 	for (int yOff{}; yOff < h; yOff++)
 	{
 		for (int xOff{}; xOff < 8; xOff++)
@@ -136,6 +98,7 @@ void CHIP8::DisplaySprite(int x, int y, int h)
 
 char CHIP8::GetKeyConverted()
 {
+	// Convert the normal keyboard keys to the CHIP-8 keypad keys
 	switch (std::tolower(_window.GetLastKeyPressed()))
 	{
 		case '1': return 0x01;
