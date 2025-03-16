@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-enum class Opcode
+enum struct Opcode
 {
 	None,
 	Cls_00E0,

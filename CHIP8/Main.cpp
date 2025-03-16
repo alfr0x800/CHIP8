@@ -1,6 +1,5 @@
-#include "CHIP8.h"
-
-#include "Decode.h"
+#include "Interpreter.h"
+#include "Platform.h"
 
 #include <print>
 
@@ -12,6 +11,12 @@ int main(int argc, const char** argv)
 		std::exit(1);
 	}
 
-	CHIP8 CHIP8(argv[1]);
-	CHIP8.Run();
+	Platform platform;
+	Interpreter interpterer(&platform, argv[1]);
+
+	while (platform.GetIsOpen())
+	{
+		interpterer.Cycle();
+		platform.Update();
+	}
 }

@@ -1,2 +1,2 @@
 # CHIP8
-A CHIP-8 interpreter and disassembler
+A CHIP-8 interpreter
