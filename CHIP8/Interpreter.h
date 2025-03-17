@@ -9,10 +9,12 @@
 class Interpreter
 {
 private:
-	Platform* _platform{};
+	Platform _platform;
 
 	std::bitset<64 * 32> _display{};
 
+	std::bitset<16> _keypad{};
+	
 	std::array<uint8_t, 2048> _memory{};
 	std::array<uint16_t, 12> _stack{};
 
@@ -25,13 +27,10 @@ private:
 	uint8_t _soundTimer{};
 
 public:
-	Interpreter(Platform* platform, const std::string_view& romPath);
-
-	void Cycle();
+	Interpreter(const std::string_view& romPath);
+	void Run();
 
 private:
+	void Cycle();
 	void DisplaySetPixel(int x, int y);
-	void DisplaySprite(int x, int y, int h);
-
-	char GetKeyConverted();
 };

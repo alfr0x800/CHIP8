@@ -11,12 +11,6 @@ int main(int argc, const char** argv)
 		std::exit(1);
 	}
 
-	Platform platform;
-	Interpreter interpterer(&platform, argv[1]);
-
-	while (platform.GetIsOpen())
-	{
-		interpterer.Cycle();
-		platform.Update();
-	}
+	Interpreter interpterer(argv[1]);
+	interpterer.Run();
 }

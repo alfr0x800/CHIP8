@@ -6,10 +6,8 @@
 #include <fstream>
 #include <print>
 
-Interpreter::Interpreter(Platform* platform, const std::string_view& romPath) 
+Interpreter::Interpreter(const std::string_view& romPath)
 {
-	_platform = platform;
-
 	// Load the ROM into memory
 	std::ifstream rom(romPath.data(), std::ifstream::binary);
 	size_t romSize{ std::filesystem::file_size(romPath) };
@@ -20,16 +18,27 @@ Interpreter::Interpreter(Platform* platform, const std::string_view& romPath)
 	std::copy(Font::Data.begin(), Font::Data.end(), _memory.begin());
 }
 
+
+void Interpreter::Run()
+{
+	while (_platform.GetIsOpen())
+	{
+		Cycle();
+		_platform.Update(_keypad, _display);
+	}
+}
+
 void Interpreter::Cycle()
 {
 	// Fetch and decode
 	Instruction ins((_memory[_pc++] << 8) | _memory[_pc++]);
+
 	// Execute
 	switch (ins.Opcode)
 	{
 		case Opcode::Cls_00E0:
 			_display = {};
-			_platform->Clear();
+			_platform.Clear();
 			break;
 		case Opcode::Ret_00EE:
 			_pc = _stack[--_sp];
@@ -101,20 +110,22 @@ void Interpreter::Cycle()
 			_v[ins.X] = std::rand() % ins.NN;
 			break;
 		case Opcode::Drw_Dxyn:
-			DisplaySprite(_v[ins.X], _v[ins.Y], ins.N);
+			for (int yOff{}; yOff < ins.N; yOff++)
+				for (int xOff{}; xOff < 8; xOff++)
+					if (_memory[_i + yOff] & (0x80 >> xOff))
+						DisplaySetPixel(_v[ins.X] + xOff, _v[ins.Y] + yOff);
 			break;
 		case Opcode::Skp_Ex9E:
-			_pc += GetKeyConverted() == _v[ins.X] ? 2 : 0;
+			_pc += _keypad[_v[ins.X]] ? 2 : 0;
 			break;
 		case Opcode::Sknp_ExA1:
-			_pc += GetKeyConverted() != _v[ins.X] ? 2 : 0;
+			_pc += !_keypad[_v[ins.X]] ? 2 : 0;
 			break;
 		case Opcode::Ld_Fx07:
 			_v[ins.X] = _delayTimer;
 			break;
 		case Opcode::Ld_Fx0A:
-			_v[ins.X] = GetKeyConverted();
-			_pc -= _v[ins.X] == -1 ? 2 : 0;
+			_pc -= _keypad[_v[ins.X]] ? 0 : 2;
 			break;
 		case Opcode::Ld_Fx15:
 			_delayTimer = _v[ins.X];
@@ -145,16 +156,23 @@ void Interpreter::Cycle()
 			break;
 	}
 
-	std::system("cls");
-	for (int y{}; y < 32; y++)
+	// Tick timers
+	_delayTimer -= _delayTimer > 0;
+	_soundTimer -= _soundTimer > 0;
+
+	/*for (int y{}; y < 32; y++)
 	{
 		for (int x{}; x < 64; x++)
+		{
 			if (_display[y * 64 + x])
 				std::print("#");
 			else
 				std::print(" ");
+
+		}
+
 		std::print("\n");
-	}
+	}*/
 }
 
 void Interpreter::DisplaySetPixel(int x, int y)
@@ -166,55 +184,5 @@ void Interpreter::DisplaySetPixel(int x, int y)
 	// Set the pixel and flag
 	_v[0xF] = _display[y * 64 + x];
 	_display[y * 64 + x] = _display[y * 64 + x] ? false : true;
-	_platform->DrawPixel(x, y, _display[y * 64 + x]);
-}
-
-void Interpreter::DisplaySprite(int x, int y, int h)
-{
-	for (int yOff{}; yOff < h; yOff++)
-		for (int xOff{}; xOff < 8; xOff++)
-			if (_memory[_i + yOff] & (0x80 >> xOff))
-				DisplaySetPixel(x + xOff, y + yOff);
-}
-
-char Interpreter::GetKeyConverted()
-{
-	// Convert the normal keyboard keys to the CHIP-8 keypad keys
-	switch (std::tolower(_platform->GetLastKey()))
-	{
-		case '1': 
-			return 0x01;
-		case '2': 
-			return 0x02;
-		case '3': 
-			return 0x03;
-		case '4': 
-			return 0x0C;
-		case 'q': 
-			return 0x04;
-		case 'w': 
-			return 0x05;
-		case 'e': 
-			return 0x06;
-		case 'r': 
-			return 0x0D;
-		case 'a': 
-			return 0x07;
-		case 's': 
-			return 0x08;
-		case 'd': 
-			return 0x09;
-		case 'f': 
-			return 0x0E;
-		case 'z': 
-			return 0x0A;
-		case 'x': 
-			return 0x00;
-		case 'c': 
-			return 0x0B;
-		case 'v': 
-			return 0x0F;
-		default: 
-			return -1;
-	}
+	_platform.DrawPixel(x, y, _display[y * 64 + x]);
 }
